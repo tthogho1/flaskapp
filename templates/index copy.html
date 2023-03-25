@@ -1,0 +1,139 @@
+﻿<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+	<input id="prompt" type="text" style="width:500px" value="" /><BR>
+	<input type="hidden" id="base64Image" value="" />
+	<button type="button" id="createImage"  onclick="sendPrompt()" />create image</button>
+	<BR>
+	<img id="createImg" src="" width="256px" height="256px">
+	<BR>
+	
+	<button type="button" id="searchImage"  onclick="searchImage()" />search image</button>
+	<BR>
+	<div style="float: left;">
+		<label>file11</label><input id="file11" type="text" value="" style="border:0px" readonly/>
+		<label>similarity</label><input id="similarity11" type="text" value="" style="border:0px" readonly/>
+	<div>
+		<img id="result11" border="0" src="" style="display:none" />
+	</div>
+	
+	<label>file12</label><input id="file12" type="text" value="" style="border:0px" readonly/>
+	<label>similarity</label><input id="similarity12" type="text" value="" style="border:0px" readonly/>
+	<div>
+		<img id="result12" border="0" src="" style="display:none" />
+	</div>
+	
+		<label>file13</label><input id="file13" type="text" value="" style="border:0px" readonly/>
+		<label>similarity</label><input id="similarity13" type="text" value="" style="border:0px" readonly/>
+	<div>
+		<img id="result13" border="0" src="" style="display:none" />
+	</div>
+	</div>
+	
+<script>
+
+const handle = new Promise((resolve,reject) =>{
+  name = "tthogho1";
+  key = "09a1923a60a2cd15884b58823ff5757e0641d5661";
+  secret = "b93a07ba99a7243c03bad55bcd6a0e5f";
+  text = document.getElementById('inputT').value;
+
+  const oauth = OAuth({
+    consumer: { key, secret },
+    signature_method: "HMAC-SHA1",
+    hash_function(base_string, key) {
+      return CryptoJS.HmacSHA1(base_string, key).toString(CryptoJS.enc.Base64);
+    }
+  });
+
+  const options = {
+    url: "https://mt-auto-minhon-mlt.ucri.jgn-x.jp/api/mt/generalNT_ja_en/",
+    method: "POST",
+    data: { text, name, key, type: "json" }
+  };
+
+  const cors_support = "https://corsproxy.io/?";
+  fetch(cors_support + options.url, {
+    method: options.method,
+    body: new URLSearchParams(options.data),
+    headers: oauth.toHeader(oauth.authorize(options))
+  }).then((r) => r.json())
+  .then((data) =>{ resolve(data.resultset.result.text)});
+
+})
+
+async function sendPrompt(){
+
+	let prompt = document.getElementById('prompt').value ;
+	
+	let res = await handle();
+	alert(prompt);
+	
+	const obj = {"prompt" : prompt};
+	const method = "POST";
+	const body = Object.keys(obj).map((key)=>key+"="+encodeURIComponent(obj[key])).join("&");
+	const headers = {
+		'Content-Type': 'application/x-www-form-urlencoded'
+	};
+	const url = "http://ac6d-35-247-135-155.ngrok.io"
+	
+	fetch(url, 
+		{method, headers, body})
+		.then( (res) => res.text() )
+		.then((text) => {
+			document.getElementById('createImg').src = text;
+			document.getElementById('base64Image').value = text;
+		})
+		.catch(error=>{
+			console.log(error);
+		});
+}
+
+
+function searchImage(){
+
+	let base64Image = document.getElementById('base64Image').value ;
+	//alert(prompt);
+	
+	const obj = {"base64Image" : base64Image};
+	const method = "POST";
+	const body = Object.keys(obj).map((key)=>key+"="+encodeURIComponent(obj[key])).join("&");
+	const headers = {
+		'Content-Type': 'application/x-www-form-urlencoded'
+	};
+	const url = "http://localhost:5000/getSimilarImageFromBase64"
+	
+	fetch(url, {method, headers, body})
+		.then( (res) => res.json() )
+		.then((data) => {
+			resultSet(data);
+		})
+		.catch(error=>{
+			console.log(error);
+		});
+}
+
+    function setImage(imgid,simid,image,similarity,fileid) {
+        $(imgid).attr("src", 'http://localhost:5000/download/' + image);
+        $(imgid).show();
+        $(fileid).val(image);
+        $(simid).val(similarity);
+    }
+
+    function resultSet(data) {
+        let jsonObj = data;
+        console.log(jsonObj);
+
+        let keys = Object.keys(jsonObj);
+
+        setImage("#result11","#similarity11", keys[0], jsonObj[keys[0]],"#file11");
+        setImage("#result12","#similarity12", keys[1], jsonObj[keys[1]],"#file12");
+        setImage("#result13","#similarity13", keys[2], jsonObj[keys[2]],"#file13");
+
+    }
+
+</script>
+</body>
+</html>

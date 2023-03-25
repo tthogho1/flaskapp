@@ -3,6 +3,8 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 import pickle
+from io import BytesIO
+import base64
 
 class ImageSearch:
     # Load the pre-trained ResNet50 model
@@ -48,10 +50,31 @@ class ImageSearch:
 
         return features
 
+    def getFeatureFromBase64(self,base64String):
+        f = BytesIO()
+        f.write(base64.b64decode(base64String))
+        f.seek(0)
+        image = Image.open(f)
+        image = ImageSearch.preprocess(image)
+        image = image.unsqueeze(0).to(ImageSearch.device)
+        with torch.no_grad():
+            features = ImageSearch.model(image)
 
-    def searchImages(self, queryImage , topK=5):
+        return features
+
+    def searchImagesFromFile(self, queryImage , topK=3):
         queryFeature = ImageSearch.getFeature(self,queryImage)
+        result_files, score_list = ImageSearch.searchImages(self,queryFeature)
+                
+        return result_files, score_list
+
+    def searchImagesFromBase64(self, queryImage , topK=5):
+        queryFeature = ImageSearch.getFeatureFromBase64(self,queryImage)
+        result_files, score_list = ImageSearch.searchImages(self,queryFeature)
+        
+        return result_files, score_list
     
+    def searchImages(self, queryFeature , topK=3):
         score_list = []
         result_files = []
         for i, feature in enumerate(ImageSearch.features_list):
@@ -68,4 +91,3 @@ class ImageSearch:
                 
         # Return the top-k images and their scores
         return result_files, score_list
-
