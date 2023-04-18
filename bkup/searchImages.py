@@ -1,4 +1,5 @@
 import torch
+from torchvision.models import ResNet50_Weights
 import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
@@ -14,7 +15,7 @@ def get_device():
 
 device= get_device()
 # Load the pre-trained ResNet50 model
-model = models.resnet50(pretrained=True).to(device)
+model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1).to(device)
 model.eval()
 # Define the image preprocessing steps
 preprocess = transforms.Compose([
