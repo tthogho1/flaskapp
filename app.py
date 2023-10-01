@@ -1,9 +1,14 @@
 from flask import Flask, render_template,request,send_from_directory,make_response
 from util.ImageSearch import ImageSearch
 from flask_cors import CORS
+from metal import metal_module
+
 
 app = Flask(__name__)
 CORS(app)
+
+# for metal test site
+app.register_blueprint(metal_module)
 
 @app.route('/')
 def index():
